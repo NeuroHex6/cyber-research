@@ -1,0 +1,36 @@
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+from scapy.all import sniff
+
+class AIDefender:
+    def __init__(self, model_path=None):
+        self.model = IsolationForest(contamination=0.01)
+        if model_path:
+            self.load_model(model_path)
+    
+    def train_model(self, normal_traffic_file):
+        data = pd.read_csv(normal_traffic_file)
+        self.model.fit(data)
+    
+    def packet_handler(self, packet):
+        features = self.extract_features(packet)
+        prediction = self.model.predict([features])
+        if prediction[0] == -1:
+            print(f"[!] Anomaly detected: {packet.summary()}")
+    
+    def extract_features(self, packet):
+        # Extract relevant network features
+        return [
+            len(packet),
+            int(packet.haslayer('TCP')),
+            int(packet.haslayer('UDP'))
+        ]
+    
+    def start_monitoring(self, interface="eth0"):
+        sniff(iface=interface, prn=self.packet_handler)
+
+if __name__ == "__main__":
+    defender = AIDefender()
+    # First train on normal traffic
+    # defender.train_model("normal_traffic.csv")
+    defender.start_monitoring()
