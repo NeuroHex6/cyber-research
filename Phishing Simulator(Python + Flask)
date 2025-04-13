@@ -1,0 +1,13 @@
+from flask import Flask, request  
+
+app = Flask(__name__)  
+
+@app.route('/fake-login', methods=['POST'])  
+def fake_login():  
+    username = request.form.get('username')  
+    password = request.form.get('password')  
+    print(f"⚠️ Someone entered credentials: {username}:{password}")  
+    return "Login Failed (This was a phishing test!)"  
+
+if __name__ == "__main__":  
+    app.run(port=5000)  
