@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+# Core AI Controller
+import numpy as np
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import torch
+import random
+import json
+from datetime import datetime
+
+class HoneypotPersonaGenerator:
+    def __init__(self):
+        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2-medium")
+        self.model = GPT2LMHeadModel.from_pretrained("gpt2-medium")
+        self.persona_templates = self._load_templates()
+        
+    def _load_templates(self):
+        return {
+            "web_server": {
+                "prompt": "Generate a realistic but fake HTTP response header for a {} server:",
+                "variants": ["Apache", "Nginx", "IIS", "Cloudflare"]
+            },
+            "database": {
+                "prompt": "Create a fake {} database banner that looks authentic:",
+                "variants": ["MySQL", "PostgreSQL", "MongoDB", "Redis"]
+            }
+        }
+
+    def generate_response(self, service_type):
+        template = self.persona_templates[service_type]
+        prompt = template["prompt"].format(random.choice(template["variants"]))
+        
+        inputs = self.tokenizer(prompt, return_tensors="pt")
+        outputs = self.model.generate(
+            **inputs,
+            max_length=100,
+            do_sample=True,
+            top_k=50,
+            temperature=0.7
+        )
+        
+        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+class AttackBehaviorAnalyzer:
+    def __init__(self):
+        self.attack_patterns = []
+        self.model = self._init_ml_model()
+
+    def _init_ml_model(self):
+        # Simplified example - would use actual ML in production
+        class DummyModel:
+            def predict(self, pattern):
+                return random.choice(["script_kiddie", "advanced", "bot"])
+        return DummyModel()
+
+    def analyze(self, packet):
+        signature = {
+            "timestamp": datetime.now().isoformat(),
+            "source_ip": packet["src_ip"],
+            "payload_pattern": self._extract_pattern(packet["payload"])
+        }
+        self.attack_patterns.append(signature)
+        return self.model.predict(signature)
+
+    def _extract_pattern(self, payload):
+        # Extract unique features from payload
+        return {
+            "length": len(payload),
+            "entropy": self._calculate_entropy(payload),
+            "magic_bytes": payload[:4] if len(payload) >=4 else None
+        }
+
+    def _calculate_entropy(self, data):
+        if not data:
+            return 0
+        entropy = 0
+        for x in range(256):
+            p_x = data.count(bytes([x]))/len(data)
+            if p_x > 0:
+                entropy += -p_x * np.log2(p_x)
+        return entropy
