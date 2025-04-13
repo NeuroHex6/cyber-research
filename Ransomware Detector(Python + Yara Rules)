@@ -1,0 +1,17 @@
+import yara  
+import os  
+
+rules = yara.compile(source='''  
+rule Ransomware {  
+    strings: $a = "encrypt" nocase  
+    condition: $a  
+}''')  
+
+def scan_file(file_path):  
+    matches = rules.match(file_path)  
+    return bool(matches)  
+
+if __name__ == "__main__":  
+    file = input("File to scan: ")  
+    if scan_file(file):  
+        print("⚠️ Ransomware detected!")  
