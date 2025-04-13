@@ -1,0 +1,22 @@
+# CONCEPTUAL IMPLEMENTATION ONLY
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+class DarkStreamFramework:
+    def __init__(self):
+        self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        self.model = AutoModelForCausalLM.from_pretrained("gpt2")
+        self.encoder = self.setup_encoder()
+        
+    def setup_encoder(self):
+        # Theoretical semantic encoder (not implemented)
+        return {"algorithm": "semantic_shift_v1"}
+    
+    def embed_command(self, cmd, context):
+        """Converts command to natural language"""
+        prompt = f"Convert this to casual conversation: {cmd} about {context}"
+        outputs = self.model.generate(prompt, max_length=50)
+        return self.tokenizer.decode(outputs[0])
+    
+    def extract_command(self, message):
+        """Theoretical command extraction"""
+        return {"status": "research_only", "output": None}
