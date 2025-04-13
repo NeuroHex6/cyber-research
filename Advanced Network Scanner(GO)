@@ -1,0 +1,46 @@
+package main
+
+import (
+	"fmt"
+	"net"
+	"time"
+	"github.com/Ullaakut/nmap/v3"
+)
+
+func main() {
+	target := "192.168.1.1-254"
+	
+	scanner, err := nmap.NewScanner(
+		nmap.WithTargets(target),
+		nmap.WithPorts("1-1000"),
+		nmap.WithServiceInfo(),
+		nmap.WithTimingTemplate(nmap.TimingAggressive),
+	)
+	
+	if err != nil {
+		fmt.Printf("Scanner creation error: %v", err)
+		return
+	}
+	
+	result, warnings, err := scanner.Run()
+	if err != nil {
+		fmt.Printf("Scan error: %v", err)
+		return
+	}
+	
+	if len(*warnings) > 0 {
+		fmt.Printf("Warnings: %v\n", *warnings)
+	}
+	
+	for _, host := range result.Hosts {
+		if len(host.Ports) == 0 || len(host.Addresses) == 0 {
+			continue
+		}
+		
+		fmt.Printf("Host %q:\n", host.Addresses[0])
+		for _, port := range host.Ports {
+			fmt.Printf("\tPort %d/%s %s %s\n", 
+				port.ID, port.Protocol, port.State, port.Service.Name)
+		}
+	}
+}
