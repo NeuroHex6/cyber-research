@@ -1,0 +1,26 @@
+from sklearn.ensemble import IsolationForest
+from scapy.all import rdpcap
+import numpy as np
+
+def extract_features(pcap_file):
+    """Extract timing/size features from PCAP"""
+    packets = rdpcap(pcap_file)
+    inter_arrival = np.diff([p.time for p in packets])
+    sizes = [len(p) for p in packets]
+    return np.column_stack((
+        np.mean(inter_arrival), np.std(inter_arrival),
+        np.mean(sizes), np.max(sizes)
+    ))
+
+# Train detector (use benign traffic samples)
+X_train = [extract_features("normal_traffic.pcap") for _ in range(100)]
+clf = IsolationForest(contamination=0.01)
+clf.fit(X_train)
+
+def detect_ai_obfuscation(pcap):
+    """Returns anomaly score (higher = more suspicious)"""
+    return clf.decision_function(extract_features(pcap))
+
+# Example usage
+score = detect_ai_obfuscation("suspicious.pcap")
+print(f"Anomaly score: {score[0]:.2f}")  # >0.5 suggests AI-mixed traffic
