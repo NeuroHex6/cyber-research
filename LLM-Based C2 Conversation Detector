@@ -1,0 +1,25 @@
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import torch
+
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+def calculate_perplexity(text):
+    """Lower perplexity → more likely LLM-generated"""
+    inputs = tokenizer(text, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**inputs, labels=inputs["input_ids"])
+    return torch.exp(outputs.loss).item()
+
+def detect_c2_message(text, threshold=30.0):
+    """Threshold tuned on human vs GPT-2 conversations"""
+    ppl = calculate_perplexity(text)
+    return {
+        "perplexity": ppl,
+        "is_suspicious": ppl < threshold,
+        "explanation": f"LLM-generated text typically has perplexity < {threshold}"
+    }
+
+# Example
+result = detect_c2_message("The package will arrive at 3PM near the oak tree.")
+print(result)
