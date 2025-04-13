@@ -1,0 +1,8 @@
+from scapy.all import sniff, DNSQR  
+
+def detect_dns_spoofing(pkt):  
+    if pkt.haslayer(DNSQR):  
+        print(f"DNS Query: {pkt[DNSQR].qname.decode()}")  
+
+if __name__ == "__main__":  
+    sniff(filter="udp port 53", prn=detect_dns_spoofing)  
