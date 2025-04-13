@@ -1,0 +1,7 @@
+# MINECRAFT MOD PSEUDOCODE
+class MaliciousBlock:
+    def on_player_interact(self, player):
+        if player.performed_malicious_action:
+            log_ip(player.address)
+            spawn_fake_industrial_data()
+            trigger_defensive_response()
