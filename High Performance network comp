@@ -1,0 +1,108 @@
+// honeypot_mesh.go - High-performance network component
+package main
+
+import (
+	"C"
+	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+)
+
+type HoneypotInstance struct {
+	ID           string
+	ServiceType  string
+	Port         int
+	Listener     net.Listener
+	CurrentPersona string
+}
+
+var (
+	honeypots  = make(map[string]*HoneypotInstance)
+	meshMutex  = &sync.Mutex{}
+	personaChan = make(chan PersonaUpdate)
+)
+
+//export StartHoneypot
+func StartHoneypot(serviceType string, port int) string {
+	id := fmt.Sprintf("%s-%d-%d", serviceType, port, time.Now().Unix())
+	
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return ""
+	}
+
+	instance := &HoneypotInstance{
+		ID:          id,
+		ServiceType: serviceType,
+		Port:        port,
+		Listener:    l,
+	}
+
+	meshMutex.Lock()
+	honeypots[id] = instance
+	meshMutex.Unlock()
+
+	go handleConnections(instance)
+
+	return id
+}
+
+func handleConnections(instance *HoneypotInstance) {
+	for {
+		conn, err := instance.Listener.Accept()
+		if err != nil {
+			continue
+		}
+
+		go func(c net.Conn) {
+			defer c.Close()
+			
+			// Get fresh persona from AI controller
+			update := <-personaChan
+			instance.CurrentPersona = update.Persona
+			
+			c.Write([]byte(instance.CurrentPersona + "\n"))
+			
+			// Log interaction
+			logAttack(c.RemoteAddr().String(), instance.ServiceType)
+		}(conn)
+	}
+}
+
+func logAttack(srcIP, serviceType string) {
+	// Would send to SIEM in real implementation
+	fmt.Printf("[!] Attack detected - IP: %s Service: %s\n", srcIP, serviceType)
+}
+
+type PersonaUpdate struct {
+	HoneypotID string `json:"honeypot_id"`
+	Persona    string `json:"persona"`
+}
+
+func main() {
+	// Start control interface
+	go func() {
+		// This would connect to Python AI controller in real implementation
+		for {
+			time.Sleep(30 * time.Second)
+			personaChan <- PersonaUpdate{
+				HoneypotID: "example",
+				Persona:    "HTTP/1.1 200 OK\nServer: FakeNginx/1.25.1",
+			}
+		}
+	}()
+
+	// Start sample honeypots
+	StartHoneypot("web_server", 8080)
+	StartHoneypot("database", 5432)
+
+	// Wait for shutdown
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig
+}
