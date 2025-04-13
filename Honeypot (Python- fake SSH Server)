@@ -1,0 +1,12 @@
+from twisted.conch import manhole, manhole_ssh  
+from twisted.cred import portal  
+
+class FakeSSHRealm:  
+    def requestAvatar(self, avatarId, *args):  
+        return manhole.ManholeInteractor()  
+
+def run_honeypot(port=2222):  
+    reactor.listenTCP(port, manhole_ssh.HoneyPotSSHFactory(portal.Portal(FakeSSHRealm())))  
+
+if __name__ == "__main__":  
+    run_honeypot()  
