@@ -1,0 +1,87 @@
+RedFlag Simulator is a legally compliant, white-hat tool designed to simulate ransomware attacks for cybersecurity awareness training, penetration testing drills, and incident response preparedness. It generates realistic but fully fake "leaked" data (browser history, social media activity) and mimics ransomware behavior without harming real systems.
+
+Key Features
+✅ Safe Simulation
+
+Generates synthetic "compromised" data (JSON logs).
+
+Fake ransomware popup with auto-revert (60s timeout).
+
+✅ Training-Focused
+
+Tests employee/team responses to data breach scenarios.
+
+Post-simulation reports for debriefing.
+
+✅ Admin Controls
+
+Password-protected kill-switch (whitehat).
+
+Clear disclaimers to avoid confusion with real attacks.
+
+✅ Customizable
+
+Adjust fake data types (e.g., finance/HR records for HIPAA/GDPR drills).
+
+Use Cases
+🏢 Enterprise Security Teams: Run quarterly ransomware drills.
+
+🎓 Universities: Teach students incident response.
+
+🛡️ Government/Military: Red-team exercises (requires authorization).
+
+⚠️ Legal Disclaimers
+PLEASE READ BEFORE USING:
+
+This tool is for LEGAL, AUTHORIZED testing only.
+
+Use only on systems you own or have explicit permission to test.
+
+Violating laws (e.g., CFAA, GDPR) can result in severe penalties.
+
+No real data is accessed, encrypted, or exfiltrated.
+
+All "leaked" data is procedurally generated and fake.
+
+Not for malicious use.
+
+The maintainers disclaim all liability for misuse.
+
+Recommended for:
+
+Licensed pentesters, security trainers, and authorized IT staff.
+
+(Include this disclaimer in your repo’s README.md and LICENSE file.)
+
+Installation
+bash
+Copy
+git clone https://github.com/yourusername/RedFlag-Simulator.git
+cd RedFlag-Simulator
+python3 RedFlag_Simulator_GUI.py
+Screenshots (Conceptual)
+(Add these later as PNGs in your repo.)
+
+screenshot1.png: Clean GUI with fake data preview.
+
+screenshot2.png: Popup warning during simulation.
+
+Roadmap
+Add dark mode.
+
+Log simulation metrics (e.g., response time).
+
+Dockerize for isolated testing.
+
+Contribute
+PRs welcome! Guidelines:
+
+Code must include no real data collection.
+
+Add unit tests for new features.
+
+🔗 License: Apache 2.0 (or modify to your needs).
+
+Why This Matters
+Ransomware costs organizations $20B+ annually. Tools like RedFlag Simulator help defenders train safely.
+
