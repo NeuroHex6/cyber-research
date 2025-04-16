@@ -1,0 +1,175 @@
+import os
+import json
+import random
+from datetime import datetime, timedelta
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
+
+# ====== FAKE DATA GENERATION ======
+def generate_fake_history(days=30):
+    """Generate fake browser history (synthetic data only)."""
+    sites = [
+        "https://google.com", "https://youtube.com", 
+        "https://github.com", "https://linkedin.com",
+        "https://reddit.com/r/cybersecurity", 
+        "https://fake-bank.example.com"
+    ]
+    history = []
+    for _ in range(random.randint(50, 100)):
+        visit_time = datetime.now() - timedelta(days=random.randint(0, days))
+        history.append({
+            "url": random.choice(sites),
+            "timestamp": visit_time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+    return history
+
+def generate_fake_social_media():
+    """Generate fake social media activity."""
+    platforms = ["Twitter", "Facebook", "Instagram", "LinkedIn"]
+    return {
+        "platform": random.choice(platforms),
+        "activity": random.choice(["Like", "Post", "Share"]),
+        "content": f"Fake post about {random.choice(['cats', 'AI', 'cybersecurity'])}"
+    }
+
+# ====== GUI CLASS ======
+class RedFlagSimulator:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("RedFlag Simulator (White-Hat)")
+        self.root.geometry("600x500")
+        self.root.resizable(False, False)
+        
+        # Style
+        self.style = ttk.Style()
+        self.style.configure("TFrame", background="#f0f0f0")
+        self.style.configure("TLabel", background="#f0f0f0", font=("Arial", 10))
+        self.style.configure("TButton", font=("Arial", 10), padding=5)
+        
+        # Header
+        self.header_frame = ttk.Frame(root)
+        self.header_frame.pack(pady=10)
+        
+        ttk.Label(
+            self.header_frame, 
+            text="🚨 RedFlag Simulator", 
+            font=("Arial", 16, "bold"),
+            foreground="#d9534f"  # Red color for warning
+        ).pack()
+        
+        ttk.Label(
+            self.header_frame, 
+            text="Authorized training tool for ransomware awareness drills",
+            font=("Arial", 10)
+        ).pack()
+        
+        # Separator
+        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=10)
+        
+        # Main Content
+        self.main_frame = ttk.Frame(root)
+        self.main_frame.pack(pady=10)
+        
+        # Fake Data Preview
+        ttk.Label(
+            self.main_frame, 
+            text="Simulated 'Leaked' Data Preview:",
+            font=("Arial", 10, "bold")
+        ).pack(anchor="w")
+        
+        self.preview_text = scrolledtext.ScrolledText(
+            self.main_frame, 
+            width=70, 
+            height=15,
+            wrap=tk.WORD,
+            font=("Consolas", 9)
+        )
+        self.preview_text.pack()
+        self.preview_text.insert(tk.END, "No data generated yet. Click 'Simulate Attack'.")
+        self.preview_text.config(state="disabled")
+        
+        # Buttons
+        self.button_frame = ttk.Frame(root)
+        self.button_frame.pack(pady=10)
+        
+        self.simulate_button = ttk.Button(
+            self.button_frame,
+            text="Simulate Attack",
+            command=self.simulate_attack,
+            style="TButton"
+        )
+        self.simulate_button.pack(side="left", padx=5)
+        
+        self.kill_button = ttk.Button(
+            self.button_frame,
+            text="Admin Kill-Switch",
+            command=self.trigger_kill_switch,
+            style="TButton"
+        )
+        self.kill_button.pack(side="left", padx=5)
+        
+        # Footer
+        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=10)
+        
+        ttk.Label(
+            root, 
+            text="⚠️ This is a simulation. No real data is accessed or harmed.",
+            font=("Arial", 9),
+            foreground="#777"
+        ).pack()
+    
+    def simulate_attack(self):
+        """Generate fake data and show in the preview."""
+        fake_data = {
+            "browser_history": generate_fake_history(),
+            "social_media": [generate_fake_social_media() for _ in range(5)],
+            "warning": "THIS IS A SIMULATION. NO DATA WAS COMPROMISED."
+        }
+        
+        # Save to JSON (for drill reports)
+        with open("simulated_leak.json", "w") as f:
+            json.dump(fake_data, f, indent=2)
+        
+        # Update GUI preview
+        self.preview_text.config(state="normal")
+        self.preview_text.delete(1.0, tk.END)
+        self.preview_text.insert(tk.END, json.dumps(fake_data, indent=2))
+        self.preview_text.config(state="disabled")
+        
+        # Show popup warning
+        messagebox.showwarning(
+            "SIMULATION ACTIVE",
+            "Fake ransomware scenario activated.\n\n"
+            "Data preview updated. Check 'simulated_leak.json'.\n\n"
+            "This is a drill. No real data was harmed."
+        )
+    
+    def trigger_kill_switch(self):
+        """Admin override to stop the simulation."""
+        password = "whitehat"  # In a real tool, use secure auth
+        attempt = tk.simpledialog.askstring(
+            "Admin Authentication",
+            "Enter kill-switch password:",
+            show="*"
+        )
+        
+        if attempt == password:
+            messagebox.showinfo(
+                "SIMULATION TERMINATED",
+                "Admin override activated. Simulation ended."
+            )
+            self.preview_text.config(state="normal")
+            self.preview_text.delete(1.0, tk.END)
+            self.preview_text.insert(tk.END, "Simulation terminated by admin.")
+            self.preview_text.config(state="disabled")
+        else:
+            messagebox.showerror(
+                "ACCESS DENIED",
+                "Invalid password. Simulation continues."
+            )
+
+# ====== MAIN ======
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = RedFlagSimulator(root)
+    root.mainloop()
