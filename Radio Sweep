@@ -1,0 +1,115 @@
+# Install GNU Radio & gr-osmosdr for SDR support
+sudo apt install gnuradio gr-osmosdr hackrf
+
+# Python libraries
+pip install numpy scipy matplotlib pyaudio pyrtlsdr tensorflow keras
+
+# capture_rf.py - Record RF signals using HackRF
+from gnuradio import blocks, gr, uhd
+import numpy as np
+
+def capture_rf(freq=433e6, samp_rate=2e6, duration=10, filename="rf_capture.dat"):
+    tb = gr.top_block()
+    src = uhd.usrp_source(device_addr="", stream_args=uhd.stream_args('fc32'))
+    src.set_center_freq(freq)
+    src.set_samp_rate(samp_rate)
+    snk = blocks.file_sink(gr.sizeof_gr_complex, filename)
+    tb.connect(src, snk)
+    tb.run()
+
+if __name__ == "__main__":
+    capture_rf(freq=433e6, duration=10)  # Adjust frequency based on target
+
+# analyze_rf.py - Detect peaks in RF spectrum
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import fft, fftfreq
+
+def load_rf_data(filename="rf_capture.dat"):
+    return np.fromfile(filename, dtype=np.complex64)
+
+def analyze_peaks(signal, samp_rate=2e6):
+    n = len(signal)
+    yf = fft(signal)
+    xf = fftfreq(n, 1 / samp_rate)
+    plt.plot(xf, np.abs(yf))
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Magnitude")
+    plt.show()
+
+if __name__ == "__main__":
+    signal = load_rf_data()
+    analyze_peaks(signal)
+
+# demodulate_rf.py - Extract baseband signals
+from scipy.signal import hilbert
+
+def demodulate_am(signal):
+    analytic_signal = hilbert(signal)
+    amplitude_envelope = np.abs(analytic_signal)
+    return amplitude_envelope
+
+def demodulate_fm(signal):
+    analytic_signal = hilbert(signal)
+    instantaneous_phase = np.unwrap(np.angle(analytic_signal))
+    instantaneous_frequency = np.diff(instantaneous_phase)
+    return instantaneous_frequency
+
+if __name__ == "__main__":
+    signal = load_rf_data()
+    am_signal = demodulate_am(signal)
+    plt.plot(am_signal[:1000])
+    plt.title("AM Demodulated Signal")
+    plt.show()
+
+# tempest_recon.py - Basic screen reconstruction
+def extract_sync_signals(signal, hsync_freq=15.734e3, vsync_freq=59.94):
+    # Implement sync detection (edge detection)
+    pass
+
+def reconstruct_image(signal, width=640, height=480):
+    # Map signal amplitude to pixel brightness
+    image = np.zeros((height, width))
+    # ... (advanced processing needed)
+    return image
+
+if __name__ == "__main__":
+    signal = load_rf_data("monitor_leak.dat")
+    img = reconstruct_image(signal)
+    plt.imshow(img, cmap='gray')
+    plt.show()
+
+# keystroke_rf.py - Detect keystrokes via RF
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+
+def train_keystroke_model(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    model = SVC(kernel='rbf')
+    model.fit(X_train, y_train)
+    return model
+
+if __name__ == "__main__":
+    # Load RF samples (X) and corresponding keys (y)
+    model = train_keystroke_model(X, y)
+    print("Accuracy:", model.score(X_test, y_test))
+
+# rf_recon.py - CLI for RF side-channel analysis
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(description="RF Side-Channel Recon Suite")
+    parser.add_argument("--capture", action="store_true", help="Capture RF signals")
+    parser.add_argument("--analyze", action="store_true", help="Analyze RF spectrum")
+    parser.add_argument("--tempest", action="store_true", help="Reconstruct screen leaks")
+    args = parser.parse_args()
+
+    if args.capture:
+        capture_rf()
+    elif args.analyze:
+        analyze_peaks()
+    elif args.tempest:
+        reconstruct_image()
+
+if __name__ == "__main__":
+    main()
